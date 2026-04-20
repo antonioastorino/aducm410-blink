@@ -1,7 +1,31 @@
 #!/usr/bin/env zsh
-
+PROJEC_NAME=blink
+rm -rf build
 mkdir -p build
 
-arm-none-eabi-as -mcpu=cortex-m33 -mthumb \
+armasm --cpu=cortex-m33 --thumb \
     startup_ADuCM410.s \
-    -o build/startup_ADuCM410.o 2>&1
+    -o build/startup_ADuCM410.o
+
+FLAGS=(--target=arm-arm-none-eabi -mcpu=cortex-m33 -mthumb)
+INCLUDES=(-Ithird_party/CMSIS/Include -Ithird_party/ADuCM410/common)
+
+SOURCES=(
+    third_party/ADuCM410/common/DioLib.c
+    third_party/ADuCM410/common/system_ADuCM410.c
+    third_party/ADuCM410/common/FeeLib.c
+    main.c
+)
+
+for src in $SOURCES; do
+    name=$(basename $src .c)
+    echo "Compiling $src..."
+    armclang $FLAGS $INCLUDES -c $src -o build/${name}.o
+done
+
+armlink build/*.o --scatter ADuCM410.sct --output build/${PROJEC_NAME}.elf
+
+echo "Inspecting ELF file"
+echo "-----------------------------------"
+arm-none-eabi-objdump -h build/${PROJEC_NAME}.elf
+echo "-----------------------------------"

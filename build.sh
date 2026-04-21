@@ -23,9 +23,13 @@ for src in $SOURCES; do
     armclang $FLAGS $INCLUDES -c $src -o build/${name}.o
 done
 
-armlink build/*.o --scatter ADuCM410.sct --output build/${PROJEC_NAME}.elf
+armlink build/*.o --scatter ADuCM410.sct --output build/${PROJEC_NAME}.elf && rm build/*.o
 
 echo "Inspecting ELF file"
 echo "-----------------------------------"
 arm-none-eabi-objdump -h build/${PROJEC_NAME}.elf
 echo "-----------------------------------"
+
+fromelf --disassemble build/blink.elf > build/${PROJEC_NAME}.dis
+
+fromelf --bin build/blink.elf --output build/blink.bin
